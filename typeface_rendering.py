@@ -1,26 +1,38 @@
+import os
+from unicodedata import name as unicodename
 from PIL import Image, ImageDraw, ImageFont
 
-
-def getSize(txt, font):
-    testImg = Image.new('RGB', (1, 1))
-    testDraw = ImageDraw.Draw(testImg)
-    return testDraw.textsize(txt, font)
-
-
 if __name__ == '__main__':
-    fontname = "typefaces/liberation-mono/LiberationMono-Bold.ttf"
-    fontsize = 12
-    text = "The quick brown fox jumps over the lazy dog."
-    colorText = "black"
-    colorOutline = "red"
-    colorBackground = "white"
+    font_name = "typefaces/liberation-mono/LiberationMono-Bold.ttf"
+    font_size = 16
+    text = "".join(map(chr, range(ord('a'), ord('z')))) + \
+           "".join(map(chr, range(ord('A'), ord('Z')))) + \
+           "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
+    text_color = "black"
+    background_color = "white"
 
-    font = ImageFont.truetype(fontname, fontsize)
-    width, height = getSize(text, font)
-    img = Image.new('RGB', (width + 4, height + 4), colorBackground)
-    d = ImageDraw.Draw(img)
-    d.text((2, height / 2), text, fill=colorText, font=font)
-    d.rectangle((0, 0, width + 3, height + 3), outline=colorOutline)
+    font = ImageFont.truetype(font_name, font_size)
 
-    img.save("testing123.png")
+    test_img = Image.new('RGB', (100, 100))
+    test_draw = ImageDraw.Draw(test_img)
+    bboxes = []
+    for c in text:
+        bb = test_draw.textbbox((0, 0), c,
+                                font, anchor=None, spacing=4, align='left', direction=None,
+                                features=None, language=None, stroke_width=0, embedded_color=False)
+        bboxes.append(bb)
+    del bb
 
+    maximal_bb = list(zip(*bboxes))
+    maximal_bb = [min(maximal_bb[0]), min(maximal_bb[1]), max(maximal_bb[2]), max(maximal_bb[3])]
+    maximal_glyph_size = (maximal_bb[2] - maximal_bb[0], maximal_bb[3] - maximal_bb[1])
+
+    typeface_cache_pathname = "typeface-cache"
+    os.makedirs(typeface_cache_pathname, exist_ok=True)
+
+    for c in text:
+        img = Image.new('RGB', maximal_glyph_size, background_color)
+        d = ImageDraw.Draw(img)
+        d.text((0, 0), c, fill=text_color, font=font)
+
+        img.save(os.path.join(typeface_cache_pathname, f"char_{unicodename(c)}.png"))
