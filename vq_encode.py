@@ -1,6 +1,7 @@
 import numpy as np
 from skimage import io as imgio
 from skimage import color
+from itertools import chain
 
 
 def blockify_2d(im, bw, bh):
@@ -22,6 +23,11 @@ def crop_for_blocking(im, bw, bh):
     return im
 
 
+def blocks_to_matrix(blks):
+    mat = np.stack(list(map(np.ravel, blks)))
+    return mat
+
+
 img_pathname = "examples/tinylavi.png"
 block_w, block_h = 100, 200
 
@@ -36,7 +42,7 @@ img_rec = deblockify_2d(blocks)
 assert np.allclose(img, img_rec)
 del img_rec
 
-
+blocks_as_mat = blocks_to_matrix(list(chain.from_iterable(blocks)))
 
 moshe = 1
 
