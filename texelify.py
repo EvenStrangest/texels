@@ -3,6 +3,7 @@ import os.path
 import numpy as np
 import imageio as iio
 from skimage import color
+from skimage.filters import butterworth, gaussian
 
 from typeface_rendering import get_glyphs
 from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d, blocks_to_matrix
@@ -18,19 +19,28 @@ if __name__ == '__main__':
     text_color = "black"
     background_color = "white"
 
-    img_pathname = "examples/tinylavi.png"
+    img_name = "tinylavi"
+    img_path = "examples"
 
     glyphs = get_glyphs(font_pathname, font_size, text_color, background_color, text)
 
+    img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
-    img = np.expand_dims(color.rgb2gray(img), axis=-1)
+    cutoff_frequency_ratio = 0.01
+    # img_lpf = butterworth(img, cutoff_frequency_ratio, channel_axis=2,
+    #                       high_pass=False, order=40)  # TODO: why no squared_butterworth=True and npad=0 ?
+    img_lpf = gaussian(img, sigma=10, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
+    iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf)
+
+    img_gl = np.expand_dims(color.rgb2gray(img), axis=-1)
+    iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl)
 
     def arbitrary_val_from_dict(d):
         return next(iter(d.values()))
     block_w, block_h, three = arbitrary_val_from_dict(glyphs).shape
-    img = crop_for_blocking(img, block_w, block_h)
-    blocks = blockify_2d(img, block_w, block_h)
+    img_gl = crop_for_blocking(img_gl, block_w, block_h)
+    blocks = blockify_2d(img_gl, block_w, block_h)
 
     def grayscale_and_remove_mean(im):
         im = color.rgb2gray(im)
@@ -52,5 +62,5 @@ if __name__ == '__main__':
 
     img_rec = deblockify_2d(texels)
 
-    iio.imsave(os.path.join("examples", "tinylavi-texels.png"), img_rec)
+    iio.imsave(os.path.join(img_path, f"{img_name}-texels.png"), img_rec)
 
