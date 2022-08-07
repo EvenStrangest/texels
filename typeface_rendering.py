@@ -5,6 +5,12 @@ from PIL import Image, ImageDraw, ImageFont
 from skimage import io as iio
 
 
+def render_glyph(font, txt_color, bg_color, shape, c):
+    _im = Image.new('RGB', shape, bg_color)
+    ImageDraw.Draw(_im).text((0, 0), c, fill=txt_color, font=font)
+    return np.array(_im)
+
+
 def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
     font = ImageFont.truetype(f_pathname, f_size)
@@ -25,10 +31,8 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
     _glyphs = dict()
     for c in txt:
-        img = Image.new('RGB', maximal_glyph_size, bg_color)
-        ImageDraw.Draw(img).text((0, 0), c, fill=txt_color, font=font)
-
-        _glyphs[unicodename(c)] = np.array(img)
+        img = render_glyph(font, txt_color, bg_color, maximal_glyph_size, c)
+        _glyphs[unicodename(c)] = img
 
     return _glyphs
 
