@@ -9,7 +9,7 @@ class GlyphRenderer:
     def __init__(self, f_pathname, f_size, shape):
         self.f_pathname = f_pathname
         self.f_size = f_size
-        self.shape = shape
+        self.shape = shape[1], shape[0]
 
         self.font = ImageFont.truetype(f_pathname, f_size)
 
@@ -21,14 +21,14 @@ class GlyphRenderer:
 
 def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
-    renderer = GlyphRenderer(f_pathname, f_size, shape=(100, 100))
+    renderer = GlyphRenderer(f_pathname, f_size, shape=(None, None))
 
     test_img = Image.new('RGB', (100, 100))
     test_draw = ImageDraw.Draw(test_img)
     bboxes = []
-    for c in txt:
-        bb = test_draw.textbbox((0, 0), c,
-                                renderer.font, anchor=None, spacing=4, align='left', direction=None,
+    for _c in txt:
+        bb = test_draw.textbbox((0, 0), _c,
+                                renderer.font, anchor=None, spacing=0, align='left', direction=None,
                                 features=None, language=None, stroke_width=0, embedded_color=False)
         bboxes.append(bb)
     del bb
