@@ -12,7 +12,7 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
     test_img = Image.new('RGB', (100, 100))
     test_draw = ImageDraw.Draw(test_img)
     bboxes = []
-    for c in text:
+    for c in txt:
         bb = test_draw.textbbox((0, 0), c,
                                 font, anchor=None, spacing=4, align='left', direction=None,
                                 features=None, language=None, stroke_width=0, embedded_color=False)
