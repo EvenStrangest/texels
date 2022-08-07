@@ -1,6 +1,5 @@
 import numpy as np
 from skimage import io as imgio
-from skimage import color
 from itertools import chain
 
 
@@ -18,7 +17,7 @@ def deblockify_2d(blcks):
 
 
 def crop_for_blocking(im, bw, bh):
-    new_w, new_h = (im.shape[0] // bw) * bw, (img.shape[1] // bh) * bh
+    new_w, new_h = (im.shape[0] // bw) * bw, (im.shape[1] // bh) * bh
     im = im[:new_w, :new_h, :]  # TODO: convert to center crop
     return im
 
@@ -28,21 +27,21 @@ def blocks_to_matrix(blks):
     return mat
 
 
-img_pathname = "examples/tinylavi.png"
-block_w, block_h = 100, 200
+if __name__ == '__main__':
 
-img = imgio.imread(img_pathname).astype(float)
+    img_pathname = "examples/tinylavi.png"
+    block_w, block_h = 100, 200
 
-img = np.expand_dims(color.rgb2gray(img), axis=-1)
+    img = imgio.imread(img_pathname).astype(float)
 
-img = crop_for_blocking(img, block_w, block_h)
+    img = crop_for_blocking(img, block_w, block_h)
 
-blocks = blockify_2d(img, block_w, block_h)
-img_rec = deblockify_2d(blocks)
-assert np.allclose(img, img_rec)
-del img_rec
+    blocks = blockify_2d(img, block_w, block_h)
+    img_rec = deblockify_2d(blocks)
+    assert np.allclose(img, img_rec)
+    del img_rec
 
-blocks_as_mat = blocks_to_matrix(list(chain.from_iterable(blocks)))
+    blocks_as_mat = blocks_to_matrix(list(chain.from_iterable(blocks)))
 
-moshe = 1
+    moshe = 1
 
