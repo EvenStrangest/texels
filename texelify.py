@@ -20,13 +20,13 @@ class TexelEncoder:
                                                          text_color, background_color, self.text)
         self.glyph_blocks = {k: self.grayscale_and_remove_mean(v) for k, v in self.glyph_blocks.items()}
 
-        self.fg_img = crop_for_blocking(fg_img, *self.glyph_shape)
-        self.bg_img = crop_for_blocking(bg_img, *self.glyph_shape)
-        self.contour_img = crop_for_blocking(contour_img, *self.glyph_shape)
+        self.fg_img = crop_for_blocking(fg_img, self.glyph_shape)
+        self.bg_img = crop_for_blocking(bg_img, self.glyph_shape)
+        self.contour_img = crop_for_blocking(contour_img, self.glyph_shape)
 
-        self.fg_blocks = blockify_2d(self.fg_img, *self.glyph_shape)
-        self.bg_blocks = blockify_2d(self.bg_img, *self.glyph_shape)
-        self.contour_blocks = blockify_2d(self.contour_img, *self.glyph_shape)
+        self.fg_blocks = blockify_2d(self.fg_img, self.glyph_shape)
+        self.bg_blocks = blockify_2d(self.bg_img, self.glyph_shape)
+        self.contour_blocks = blockify_2d(self.contour_img, self.glyph_shape)
 
         self.glyph_renderer = GlyphRenderer(self.font_pathname, self.font_size, shape=self.glyph_shape)
 
