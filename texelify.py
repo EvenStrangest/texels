@@ -24,9 +24,9 @@ if __name__ == '__main__':
 
     img = np.expand_dims(color.rgb2gray(img), axis=-1)
 
-    def arbitrary_from_dict(d):
-        return d[next(iter(d))]
-    block_w, block_h = arbitrary_from_dict(glyphs)[1].shape
+    def arbitrary_val_from_dict(d):
+        return next(iter(d.values()))
+    block_w, block_h, three = arbitrary_val_from_dict(glyphs).shape
     img = crop_for_blocking(img, block_w, block_h)
     blocks = blockify_2d(img, block_w, block_h)
 
