@@ -1,26 +1,34 @@
 import os
 import numpy as np
-from unicodedata import name as unicodename
+from unicodedata import name as unicode_name
 from PIL import Image, ImageDraw, ImageFont
 from skimage import io as iio
 
 
-def render_glyph(font, txt_color, bg_color, shape, c):
-    _im = Image.new('RGB', shape, bg_color)
-    ImageDraw.Draw(_im).text((0, 0), c, fill=txt_color, font=font)
-    return np.array(_im)
+class GlyphRenderer:
+    def __init__(self, f_pathname, f_size, shape):
+        self.f_pathname = f_pathname
+        self.f_size = f_size
+        self.shape = shape
+
+        self.font = ImageFont.truetype(f_pathname, f_size)
+
+    def render(self, txt_color, bg_color, _chr):
+        _im = Image.new('RGB', self.shape, bg_color)
+        ImageDraw.Draw(_im).text((0, 0), _chr, fill=txt_color, font=self.font)
+        return np.array(_im)
 
 
 def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
-    font = ImageFont.truetype(f_pathname, f_size)
+    renderer = GlyphRenderer(f_pathname, f_size, shape=(100, 100))
 
     test_img = Image.new('RGB', (100, 100))
     test_draw = ImageDraw.Draw(test_img)
     bboxes = []
     for c in txt:
         bb = test_draw.textbbox((0, 0), c,
-                                font, anchor=None, spacing=4, align='left', direction=None,
+                                renderer.font, anchor=None, spacing=4, align='left', direction=None,
                                 features=None, language=None, stroke_width=0, embedded_color=False)
         bboxes.append(bb)
     del bb
@@ -29,12 +37,16 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
     maximal_bb = [min(maximal_bb[0]), min(maximal_bb[1]), max(maximal_bb[2]), max(maximal_bb[3])]
     maximal_glyph_size = (maximal_bb[2] - maximal_bb[0], maximal_bb[3] - maximal_bb[1])
 
-    _glyphs = dict()
-    for c in txt:
-        img = render_glyph(font, txt_color, bg_color, maximal_glyph_size, c)
-        _glyphs[unicodename(c)] = img
+    renderer = GlyphRenderer(f_pathname, f_size, shape=maximal_glyph_size)
 
-    return _glyphs
+    _glyphs = dict()
+    _glyph_names = dict()
+    for _c in txt:
+        img = renderer.render(txt_color, bg_color, _c)
+        _glyphs[_c] = img
+        _glyph_names[_c] = unicode_name(_c)
+
+    return _glyphs, _glyph_names
 
 
 if __name__ == '__main__':
@@ -47,10 +59,10 @@ if __name__ == '__main__':
     text_color = "black"
     background_color = "white"
 
-    glyphs = get_glyphs(font_pathname, font_size, text_color, background_color, text)
+    glyphs, glyph_names = get_glyphs(font_pathname, font_size, text_color, background_color, text)
 
     typeface_cache_pathname = "typeface-cache"
     os.makedirs(typeface_cache_pathname, exist_ok=True)
-    for nm, im in glyphs.items():
-        iio.imsave(os.path.join(typeface_cache_pathname, f"char_{nm}.png"), im)
+    for c, im in glyphs.items():
+        iio.imsave(os.path.join(typeface_cache_pathname, f"char_{glyph_names[c]}.png"), im)
 
