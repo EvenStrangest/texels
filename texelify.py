@@ -1,9 +1,11 @@
+import os.path
+
 import numpy as np
-import imageio as imgio
+import imageio as iio
 from skimage import color
 
 from typeface_rendering import get_glyphs
-from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d
+from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d, blocks_to_matrix
 
 
 if __name__ == '__main__':
@@ -20,7 +22,7 @@ if __name__ == '__main__':
 
     glyphs = get_glyphs(font_pathname, font_size, text_color, background_color, text)
 
-    img = imgio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
+    img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
     img = np.expand_dims(color.rgb2gray(img), axis=-1)
 
@@ -30,7 +32,25 @@ if __name__ == '__main__':
     img = crop_for_blocking(img, block_w, block_h)
     blocks = blockify_2d(img, block_w, block_h)
 
-    # TODO: do stuff
+    def grayscale_and_remove_mean(im):
+        im = color.rgb2gray(im)
+        im = im - np.mean(im.flatten())
+        return im
+    glyphs_as_matrix = blocks_to_matrix(list(map(grayscale_and_remove_mean, glyphs.values())))
 
-    img_rec = deblockify_2d(blocks)
+    texels_shape = len(blocks), len(blocks[0])
+    # glyph_selection_dtype = np.int8
+    # assert len(glyphs) < np.iinfo(glyph_selection_dtype).max
+    texel_glyph_selection = [[-1] * texels_shape[1] for i in range(texels_shape[0])]
+    for i in range(texels_shape[0]):
+        for j in range(texels_shape[1]):
+            texel_glyph_selection[i][j] = int(np.argmax(np.matmul(glyphs_as_matrix, blocks[i][j].flatten())))
+
+    def glyph_lookup(sel):
+        return list(glyphs.values())[sel]
+    texels = [list(map(glyph_lookup, sl)) for sl in texel_glyph_selection]
+
+    img_rec = deblockify_2d(texels)
+
+    iio.imsave(os.path.join("examples", "tinylavi-texels.png"), img_rec)
 
