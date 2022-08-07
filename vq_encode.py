@@ -1,5 +1,5 @@
 import numpy as np
-from skimage import io as imgio
+from skimage import io as iio
 from itertools import chain
 
 
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     img_pathname = "examples/tinylavi.png"
     block_w, block_h = 100, 200
 
-    img = imgio.imread(img_pathname).astype(float)
+    img = iio.imread(img_pathname).astype(float)
 
     img = crop_for_blocking(img, block_w, block_h)
 

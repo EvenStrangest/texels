@@ -2,7 +2,7 @@ import os
 import numpy as np
 from unicodedata import name as unicodename
 from PIL import Image, ImageDraw, ImageFont
-from skimage import io as imgio
+from skimage import io as iio
 
 
 def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
@@ -48,5 +48,5 @@ if __name__ == '__main__':
     typeface_cache_pathname = "typeface-cache"
     os.makedirs(typeface_cache_pathname, exist_ok=True)
     for nm, im in glyphs.items():
-        imgio.imsave(os.path.join(typeface_cache_pathname, f"char_{nm}.png"), im)
+        iio.imsave(os.path.join(typeface_cache_pathname, f"char_{nm}.png"), im)
 
