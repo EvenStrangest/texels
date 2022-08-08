@@ -90,7 +90,7 @@ if __name__ == '__main__':
     img_lpf = gaussian(img, sigma=12, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
     iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf)
 
-    img_gl = np.expand_dims(color.rgb2gray(img), axis=-1)  # TODO: move expand dims to where it is needed
+    img_gl = TexelEncoder.grayscale_and_remove_mean(img)
     iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl)
 
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)

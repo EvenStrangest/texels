@@ -20,7 +20,12 @@ def deblockify_2d(blcks):
 def crop_for_blocking(im, shape):
     bw, bh = shape
     new_w, new_h = (im.shape[0] // bw) * bw, (im.shape[1] // bh) * bh
-    im = im[:new_w, :new_h, :]  # TODO: convert to center crop
+    if im.ndim == 3:
+        im = im[:new_w, :new_h, :]  # TODO: convert to center crop
+    elif im.ndim == 2:
+        im = im[:new_w, :new_h]  # TODO: convert to center crop
+    else:
+        raise ValueError
     return im
 
 
