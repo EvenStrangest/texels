@@ -3,7 +3,7 @@ import os.path
 import numpy as np
 import imageio as iio
 from skimage import color
-from skimage.filters import butterworth, gaussian
+from skimage.filters import gaussian
 
 from typeface_rendering import get_glyphs, GlyphRenderer
 from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d, blocks_to_matrix
@@ -87,13 +87,10 @@ if __name__ == '__main__':
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
-    # cutoff_frequency_ratio = 0.01
-    # img_lpf = butterworth(img, cutoff_frequency_ratio, channel_axis=2,
-    #                       high_pass=False, order=40)  # TODO: why no squared_butterworth=True and npad=0 ?
     img_lpf = gaussian(img, sigma=12, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
     iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf)
 
-    img_gl = np.expand_dims(color.rgb2gray(img), axis=-1)
+    img_gl = np.expand_dims(color.rgb2gray(img), axis=-1)  # TODO: move expand dims to where it is needed
     iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl)
 
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)
