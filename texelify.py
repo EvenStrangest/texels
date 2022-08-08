@@ -54,11 +54,16 @@ class TexelEncoder:
         glyph_selection = int(np.argmax(np.abs(np.matmul(self._glyphs_as_matrix, _contour_block.flatten()))))
         glyph_selection = list(self.glyph_blocks.keys())[glyph_selection]  # TODO: this is barbaric?!
 
-        def mean_color(im):
-            clr = np.mean(np.mean(im, axis=0), axis=0)
-            # clr = im[0, 0, :]
+        glyph_template = self.glyph_renderer.render(txt_color=(255, 255, 255), bg_color=(0, 0, 0), _chr=glyph_selection)
+        glyph_template = glyph_template.astype(float)[:, :, 0] / 255.0
+
+        def mean_color(im, mask=None):
+            if mask is None or np.sum(mask.flatten()) == 0:
+                mask = np.ones(shape=im.shape[0:2])
+            masked_img = np.expand_dims(mask, axis=-1) * im
+            clr = np.mean(np.mean(masked_img, axis=0), axis=0) / np.mean(mask.flatten())
             return tuple(clr.astype(np.uint8))
-        txt_color = mean_color(_fg_block)  # TODO: consider replacing this with masked mean
+        txt_color = mean_color(_fg_block, glyph_template)
         bg_color = mean_color(_bg_block)
         # assert np.all(np.array(txt_color) >= 0) and np.all(np.array(txt_color) <= 255)
         # assert np.all(np.array(bg_color) >= 0) and np.all(np.array(bg_color) <= 255)
@@ -108,10 +113,12 @@ if __name__ == '__main__':
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
+    # TODO: write images after "cropping for blocking"
+
     img_lpf = gaussian(img, sigma=gaussian_smoothing_sigma, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
     iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf, compression=0)
 
-    img_gl = TexelEncoder.grayscale_and_remove_mean(img)
+    img_gl = TexelEncoder.grayscale_and_remove_mean(img - img_lpf)
     iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl, compression=0)
 
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)
