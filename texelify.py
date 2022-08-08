@@ -24,13 +24,22 @@ class TexelEncoder:
         self.bg_img = crop_for_blocking(bg_img, self.glyph_shape)
         self.contour_img = crop_for_blocking(contour_img, self.glyph_shape)
 
+        def normalize_to_range_0_255(im):
+            _min, _max = np.min(im.flatten()), np.max(im.flatten())
+            im = (im - _min) / _max * 255.0
+            # assert np.all(im >= 0) and np.all(im <= 255)
+            return im
+        self.fg_img = normalize_to_range_0_255(self.fg_img)
+        self.bg_img = normalize_to_range_0_255(self.bg_img)
+        # TODO: consider moving grayscale_and_remove_mean of contour_img here from outside
+
         self.fg_blocks = blockify_2d(self.fg_img, self.glyph_shape)
         self.bg_blocks = blockify_2d(self.bg_img, self.glyph_shape)
         self.contour_blocks = blockify_2d(self.contour_img, self.glyph_shape)
 
         self.glyph_renderer = GlyphRenderer(self.font_pathname, self.font_size, shape=self.glyph_shape)
 
-        self.__glyphs_as_matrix = blocks_to_matrix(self.glyph_blocks.values())
+        self._glyphs_as_matrix = blocks_to_matrix(self.glyph_blocks.values())
 
     def encode(self):
         _texels = [[None] * self.texels_shape[1] for _ in range(self.texels_shape[0])]
@@ -42,15 +51,21 @@ class TexelEncoder:
         return _texels
 
     def __encode_block(self, _fg_block, _bg_block, _contour_block):
-        glyph_selection = int(np.argmax(np.matmul(self.__glyphs_as_matrix, _contour_block.flatten())))
+        glyph_selection = int(np.argmax(np.abs(np.matmul(self._glyphs_as_matrix, _contour_block.flatten()))))
         glyph_selection = list(self.glyph_blocks.keys())[glyph_selection]  # TODO: this is barbaric?!
 
-        def mean_color(im):  # TODO: algorithmically broken - fix it!
-            # clr = np.mean(np.mean(im, axis=0), axis=0)
-            clr = im[0, 0, :]
-            return tuple(clr.astype(np.int8))
+        def mean_color(im):
+            clr = np.mean(np.mean(im, axis=0), axis=0)
+            # clr = im[0, 0, :]
+            return tuple(clr.astype(np.uint8))
         txt_color = mean_color(_fg_block)
         bg_color = mean_color(_bg_block)
+        # assert np.all(np.array(txt_color) >= 0) and np.all(np.array(txt_color) <= 255)
+        # assert np.all(np.array(bg_color) >= 0) and np.all(np.array(bg_color) <= 255)
+        # txt_color = "black"
+        # bg_color = "white"
+        # txt_color = (0, 0, 0)
+        # bg_color = (255, 255, 255)
 
         texel = self.glyph_renderer.render(txt_color, bg_color, glyph_selection)
 
@@ -76,7 +91,6 @@ class TexelEncoder:
 if __name__ == '__main__':
 
     font_pathname = "typefaces/liberation-mono/LiberationMono-Bold.ttf"
-    font_size = 16
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
            "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
@@ -84,10 +98,13 @@ if __name__ == '__main__':
     img_name = "tinylavi"
     img_path = "examples"
 
+    gaussian_smoothing_sigma = 25
+    font_size = 14
+
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
-    img_lpf = gaussian(img, sigma=12, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
+    img_lpf = gaussian(img, sigma=gaussian_smoothing_sigma, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
     iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf)
 
     img_gl = TexelEncoder.grayscale_and_remove_mean(img)
