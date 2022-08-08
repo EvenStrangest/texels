@@ -58,7 +58,7 @@ class TexelEncoder:
             clr = np.mean(np.mean(im, axis=0), axis=0)
             # clr = im[0, 0, :]
             return tuple(clr.astype(np.uint8))
-        txt_color = mean_color(_fg_block)
+        txt_color = mean_color(_fg_block)  # TODO: consider replacing this with masked mean
         bg_color = mean_color(_bg_block)
         # assert np.all(np.array(txt_color) >= 0) and np.all(np.array(txt_color) <= 255)
         # assert np.all(np.array(bg_color) >= 0) and np.all(np.array(bg_color) <= 255)
@@ -95,20 +95,24 @@ if __name__ == '__main__':
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
            "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
 
-    img_name = "tinylavi"
+    img_name = "snapchatgold"
     img_path = "examples"
 
-    gaussian_smoothing_sigma = 25
-    font_size = 14
+    gaussian_smoothing_sigma = 48
+    font_size = 48
+
+    parameters = '\n'.join([f"{gaussian_smoothing_sigma=}", f"{font_size=}", f"{text=}"])
+    with open(os.path.join(img_path, f"{img_name}.txt"), 'w') as f:
+        f.write(parameters)
 
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
     img_lpf = gaussian(img, sigma=gaussian_smoothing_sigma, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
-    iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf)
+    iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf, compression=0)
 
     img_gl = TexelEncoder.grayscale_and_remove_mean(img)
-    iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl)
+    iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl, compression=0)
 
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)
 
@@ -116,5 +120,5 @@ if __name__ == '__main__':
 
     img_rec = deblockify_2d(texels)
 
-    iio.imsave(os.path.join(img_path, f"{img_name}-texels.png"), img_rec)
+    iio.imsave(os.path.join(img_path, f"{img_name}-texels.png"), img_rec, compression=0)
 
