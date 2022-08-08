@@ -114,6 +114,8 @@ if __name__ == '__main__':
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
     # TODO: write images after "cropping for blocking"
+    # TODO: include parameters in filename
+    # TODO: write parameters onto image body
 
     img_lpf = gaussian(img, sigma=gaussian_smoothing_sigma, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
     iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf, compression=0)
