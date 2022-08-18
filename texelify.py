@@ -121,17 +121,17 @@ if __name__ == '__main__':
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     img = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
-    # TODO: write images after "cropping for blocking"
     # TODO: include parameters in filename
     # TODO: write parameters onto image body
 
     img_lpf = gaussian(img, sigma=gaussian_smoothing_sigma, mode='nearest', preserve_range=True, truncate=4.0, channel_axis=2)
-    iio.imsave(os.path.join(img_path, f"{img_name}-lpf.png"), img_lpf, compression=0)
-
     img_gl = TexelEncoder.grayscale_and_remove_mean(img - img_lpf)
-    iio.imsave(os.path.join(img_path, f"{img_name}-gl.png"), img_gl, compression=0)
 
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)
+
+    iio.imsave(os.path.join(img_path, f"{img_name}-backg.png"), encoder.bg_img, compression=0)
+    iio.imsave(os.path.join(img_path, f"{img_name}-foreg.png"), encoder.fg_img, compression=0)
+    iio.imsave(os.path.join(img_path, f"{img_name}-contr.png"), encoder.contour_img, compression=0)
 
     texels = encoder.encode()
     img_rec = encoder.deblockify(texels)
