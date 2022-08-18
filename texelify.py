@@ -71,10 +71,6 @@ class TexelEncoder:
         bg_color = mean_color(_bg_block)
         # assert np.all(np.array(txt_color) >= 0) and np.all(np.array(txt_color) <= 255)
         # assert np.all(np.array(bg_color) >= 0) and np.all(np.array(bg_color) <= 255)
-        # txt_color = "black"
-        # bg_color = "white"
-        # txt_color = (0, 0, 0)
-        # bg_color = (255, 255, 255)
 
         texel = self.glyph_renderer.render(txt_color, bg_color, glyph_selection)
 
