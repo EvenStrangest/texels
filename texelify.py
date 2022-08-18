@@ -97,10 +97,10 @@ class TexelEncoder:
         return len(self.contour_blocks), len(self.contour_blocks[0])
 
     @staticmethod
-    def grayscale_and_remove_mean(im):
-        im = color.rgb2gray(im)
-        im = im - np.mean(im.flatten())
-        return im
+    def grayscale_and_remove_mean(_im):
+        _im = color.rgb2gray(_im)
+        _im = _im - np.mean(_im.flatten())
+        return _im
 
     @staticmethod
     def deblockify(blks):
