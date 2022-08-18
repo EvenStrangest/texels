@@ -115,9 +115,6 @@ if __name__ == '__main__':
     img_pathname = os.path.join(img_path, f"{img_name}.png")
     im = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
-    # TODO: include parameters in filename
-    # TODO: write parameters onto image body
-
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
            "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
