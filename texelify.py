@@ -10,14 +10,14 @@ from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d, blocks_to_m
 
 
 class TexelEncoder:
-    def __init__(self, font_pn, font_sz, txt, fg_img, bg_img, contour_img):
+    def __init__(self, font_pn, font_sz, chars, fg_img, bg_img, contour_img):
         self.font_pathname = font_pn
         self.font_size = font_sz
-        self.text = txt
+        self.chars = chars
 
         text_color, background_color = "black", "white"
         self.glyph_blocks, self.glyph_names = get_glyphs(self.font_pathname, self.font_size,
-                                                         text_color, background_color, self.text)
+                                                         text_color, background_color, self.chars)
         self.glyph_blocks = {k: self.grayscale_and_remove_mean(v) for k, v in self.glyph_blocks.items()}
 
         self.fg_img = crop_for_blocking(fg_img, self.glyph_shape)
@@ -40,6 +40,10 @@ class TexelEncoder:
         self.glyph_renderer = GlyphRenderer(self.font_pathname, self.font_size, shape=self.glyph_shape)
 
         self._glyphs_as_matrix = blocks_to_matrix(self.glyph_blocks.values())
+
+    def __str__(self):
+        _, font_name = os.path.split(self.font_pathname)
+        return f"{font_name=}, {self.font_size=}, {self.chars=}"
 
     def encode(self):
         _texels = [[None] * self.texels_shape[1] for _ in range(self.texels_shape[0])]
@@ -92,6 +96,10 @@ class TexelEncoder:
         im = im - np.mean(im.flatten())
         return im
 
+    @staticmethod
+    def deblockify(blks):
+        return deblockify_2d(blks)
+
 
 if __name__ == '__main__':
 
@@ -126,8 +134,7 @@ if __name__ == '__main__':
     encoder = TexelEncoder(font_pathname, font_size, text, img, img_lpf, img_gl)
 
     texels = encoder.encode()
-
-    img_rec = deblockify_2d(texels)
+    img_rec = encoder.deblockify(texels)
 
     iio.imsave(os.path.join(img_path, f"{img_name}-texels.png"), img_rec, compression=0)
 
