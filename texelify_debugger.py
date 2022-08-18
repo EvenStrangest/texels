@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import imageio as iio
 import os.path
-from typing import NamedTuple, Union, Tuple, Optional
+from typing import NamedTuple, Union, Tuple
 
 from texelify import TexelEncoder
 
@@ -10,17 +10,19 @@ from texelify import TexelEncoder
 class TexelifyDebugger(TexelEncoder):
 
     class DebugConfig(NamedTuple):
-        title_font_pathname: str
-        title_font_size: Optional[int] = None
-        title_color: Optional[Union[str, Tuple[int, int, int]]] = None
+        title_font_pathname: str = None
+        title_font_size: int = None
+        title_color: Union[str, Tuple[int, int, int]] = None
 
         debug_notes: str = ""
 
-    def __init__(self, im, config: TexelEncoder.Config, debug_config: DebugConfig):
-        super().__init__(im, config)
+    def __init__(self, img, config: TexelEncoder.Config, debug_config: DebugConfig):
+        super().__init__(img, config)
 
         self.debug_conf = debug_config
 
+        if self.debug_conf.title_font_pathname is None:
+            self.debug_conf.title_font_pathname = self.conf.font_pathname
         if self.debug_conf.title_font_size is None:
             self.debug_conf.title_font_size = self.fg_img.shape[0] // 10
         if self.debug_conf.title_color is None:
