@@ -31,7 +31,7 @@ class TexelEncoder:
                                                          text_color, background_color, self.conf.chars)
         self.glyph_blocks = {k: self.grayscale_and_remove_mean(v) for k, v in self.glyph_blocks.items()}
 
-        self.fg_img = crop_for_blocking(img, self.glyph_shape)
+        self.fg_img = crop_for_blocking(contour_img, self.glyph_shape)
         self.bg_img = crop_for_blocking(img_lpf, self.glyph_shape)
         self.contour_img = crop_for_blocking(contour_img, self.glyph_shape)
 
@@ -74,8 +74,12 @@ class TexelEncoder:
         def mean_color(_im, mask=None):
             if mask is None or np.sum(mask.flatten()) == 0:
                 mask = np.ones(shape=_im.shape[0:2])
+            if _im.ndim == 2:
+                _im = np.expand_dims(_im, axis=-1)
             masked_img = np.expand_dims(mask, axis=-1) * _im
             clr = np.mean(np.mean(masked_img, axis=0), axis=0) / np.mean(mask.flatten())
+            if len(clr) == 1:
+                clr = color.gray2rgb(clr[0])  # TODO: the support for grayscale around here is rather barbaric
             return tuple(clr.astype(np.uint8))
         txt_color = mean_color(_fg_block, glyph_template)
         bg_color = mean_color(_bg_block)
