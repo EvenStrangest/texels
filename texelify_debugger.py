@@ -50,6 +50,9 @@ if __name__ == '__main__':
 
     # TODO: include parameters in filename
     # TODO: write parameters onto image body
+    # TODO: include parameters in PNG metadata
+    #   https://stackoverflow.com/questions/41265608/png-metadata-read-and-write
+    #   https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python
 
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
