@@ -56,7 +56,7 @@ if __name__ == '__main__':
 
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
-           "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
+           "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"\\'
     texel_config = TexelEncoder.Config(font_pathname="typefaces/liberation-mono/LiberationMono-Bold.ttf",
                                        font_size=48,
                                        chars=text,
