@@ -23,7 +23,7 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
     renderer = GlyphRenderer(f_pathname, f_size, shape=(None, None))
 
-    test_img = Image.new('RGB', (100, 100))
+    test_img = Image.new('RGB', (f_size * 4, f_size * 4))
     test_draw = ImageDraw.Draw(test_img)
     bboxes = []
     for _c in txt:
@@ -35,7 +35,7 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 
     maximal_bb = list(zip(*bboxes))
     maximal_bb = [min(maximal_bb[0]), min(maximal_bb[1]), max(maximal_bb[2]), max(maximal_bb[3])]
-    maximal_glyph_size = (maximal_bb[2] - maximal_bb[0], maximal_bb[3] - maximal_bb[1])
+    maximal_glyph_size = (maximal_bb[3] - maximal_bb[1], maximal_bb[2] - maximal_bb[0])
 
     renderer = GlyphRenderer(f_pathname, f_size, shape=maximal_glyph_size)
 
@@ -52,7 +52,7 @@ def get_glyphs(f_pathname, f_size, txt_color, bg_color, txt):
 if __name__ == '__main__':
 
     font_pathname = "typefaces/liberation-mono/LiberationMono-Bold.ttf"
-    font_size = 16
+    font_size = 48
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
            "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
