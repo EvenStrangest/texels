@@ -28,7 +28,7 @@ class TexelEncoder:
 
         text_color, background_color = "black", "white"
         self.glyph_blocks, self.glyph_names = get_glyphs(self.conf.font_pathname, self.conf.font_size,
-                                                         text_color, background_color, self.conf.chars)
+                                                         text_color, background_color, set(self.conf.chars))
         self.glyph_blocks = {k: self.grayscale_and_remove_mean(v) for k, v in self.glyph_blocks.items()}
 
         self.fg_img = crop_for_blocking(contour_img, self.glyph_shape)
@@ -121,7 +121,7 @@ if __name__ == '__main__':
 
     text = "".join(map(chr, range(ord('a'), ord('z')))) + \
            "".join(map(chr, range(ord('A'), ord('Z')))) + \
-           "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"' "\\" + " "
+           "".join(map(chr, range(ord('0'), ord('9')))) + "?,:{}-=_+.;|[]<>()/'!@#$%^&*`" + '"\\'
     texel_config = TexelEncoder.Config(font_pathname="typefaces/liberation-mono/LiberationMono-Bold.ttf",
                                        font_size=48,
                                        chars=text,
