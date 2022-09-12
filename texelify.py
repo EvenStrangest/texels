@@ -5,6 +5,7 @@ import imageio as iio
 from skimage import color
 from skimage.filters import gaussian
 from typing import NamedTuple
+from functools import reduce
 
 from typeface_rendering import get_glyphs, GlyphRenderer
 from vq_encode import crop_for_blocking, blockify_2d, deblockify_2d, blocks_to_matrix
@@ -50,7 +51,27 @@ class TexelEncoder:
 
         self.glyph_renderer = GlyphRenderer(self.conf.font_pathname, self.conf.font_size, shape=self.glyph_shape)
 
-        self._glyphs_as_matrix = blocks_to_matrix(self.glyph_blocks.values())
+        self.__glyph_fitting_matrices = {k: self.__glyph_to_fit_mat_and_stuff(v) for k, v in self.glyph_blocks.items()}
+        self.__glyph_stuff = {k: v[1] for k, v in self.__glyph_fitting_matrices.items()}
+        self.__glyph_fitting_matrices = {k: v[0] for k, v in self.__glyph_fitting_matrices.items()}
+
+    def __glyph_to_fit_mat_and_stuff(self, glp: np.array):  # TODO: check type hint for correctness
+        assert np.max(glp.flatten()) <= 1.0
+        x = glp
+        y = np.ones_like(glp) - glp
+
+        x = np.expand_dims(x.flatten(), -1)
+        y = np.expand_dims(y.flatten(), -1)
+
+        # TODO: recheck this against notes!
+        lft = np.hstack([x, y])
+        xx, yy, xy = np.sum(np.square(x)), np.sum(np.square(y)), np.sum(x * y)
+        adj = np.array([[yy, -xy], [-xy, xx]])
+        d = (xx * yy - xy ** 2) ** - 1  # TODO: this can divide by zero! specifically, this actually would happen with a blank (space) glyph.
+        assert xx * yy - xy ** 2 != 0
+        fit_mat = d * np.matmul(adj, np.transpose(lft))
+
+        return fit_mat, lft
 
     def __str__(self):
         return str(self.conf)
@@ -65,7 +86,17 @@ class TexelEncoder:
         return _texels
 
     def __encode_block(self, _fg_block, _bg_block, _contour_block):
-        glyph_selection = int(np.argmax(np.abs(np.matmul(self._glyphs_as_matrix, _contour_block.flatten()))))
+        _contour_block = np.expand_dims(_contour_block.flatten(), -1)
+
+        def _loss(_stf, _fitmat):
+            # TODO: check this against notes!
+            _lh = float(reduce(np.matmul, [_contour_block.transpose(), _stf, _fitmat, _fitmat.transpose(), _stf.transpose(), _contour_block]))
+            _rh = float(reduce(np.matmul, [_contour_block.transpose(), _stf, _fitmat, _contour_block]))
+            return _lh - 2 * _rh
+        losses = [_loss(stf, fitmat) for stf, fitmat in zip(self.__glyph_stuff.values(), self.__glyph_fitting_matrices.values())]
+        # TODO: as some debugging logic, add energy of _contour_block and assert that loss is always non-negative
+
+        glyph_selection = np.argmin(losses)
         glyph_selection = list(self.glyph_blocks.keys())[glyph_selection]  # TODO: this is barbaric?!
 
         glyph_template = self.glyph_renderer.render(txt_color=(255, 255, 255), bg_color=(0, 0, 0), _chr=glyph_selection)
