@@ -21,6 +21,7 @@ class TexelifyDebugger(TexelEncoder):
 
         self.debug_conf = debug_config
 
+        # TODO: NamedTuple is immutable, so this code doesn't work
         if self.debug_conf.title_font_pathname is None:
             self.debug_conf.title_font_pathname = self.conf.font_pathname
         if self.debug_conf.title_font_size is None:
@@ -29,8 +30,6 @@ class TexelifyDebugger(TexelEncoder):
             self.debug_conf.title_color = "white"
 
         self.title_font = ImageFont.truetype(self.debug_conf.title_font_pathname, self.debug_conf.title_font_size)
-
-        pass
 
     def place_title(self, im, title=None):
         if title is None:
