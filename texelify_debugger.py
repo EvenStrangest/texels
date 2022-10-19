@@ -30,12 +30,13 @@ class TexelifyDebugger(TexelEncoder):
 
         self.title_font = ImageFont.truetype(self.debug_conf.title_font_pathname, self.debug_conf.title_font_size)
 
-    def place_title(self, im, title=None):
+    def place_title(self, _im, title=None):
+        dtype = _im.dtype
         if title is None:
-            title = str(self) + "\n" + self.debug_conf.debug_notes  # TODO: do we want super() here?
-        _im = Image.fromarray(im)
+            title = str(self) + "\n" + self.debug_conf.debug_notes
+        _im = Image.fromarray(_im.astype(np.uint8))
         ImageDraw.Draw(_im).text((0, 0), title, fill=self.debug_conf.title_color, font=self.title_font)
-        return np.array(_im)
+        return np.array(_im).astype(dtype)
 
 
 if __name__ == '__main__':
@@ -47,7 +48,6 @@ if __name__ == '__main__':
     im = iio.imread(img_pathname).astype(float)  # TODO: handle deprecation warning
 
     # TODO: include parameters in filename
-    # TODO: write parameters onto image body
     # TODO: include parameters in PNG metadata
     #   https://stackoverflow.com/questions/41265608/png-metadata-read-and-write
     #   https://stackoverflow.com/questions/58399070/how-do-i-save-custom-information-to-a-png-image-file-in-python
@@ -65,12 +65,12 @@ if __name__ == '__main__':
     with open(os.path.join(img_path, f"{img_name}.txt"), 'w') as f:
         f.write(str(encoder))
 
-    iio.imsave(os.path.join(img_path, f"{img_name}-backg.png"), encoder.bg_img, compression=0)
-    iio.imsave(os.path.join(img_path, f"{img_name}-foreg.png"), encoder.fg_img, compression=0)
-    iio.imsave(os.path.join(img_path, f"{img_name}-contr.png"), encoder.contour_img, compression=0)
+    iio.imsave(os.path.join(img_path, f"{img_name}-backg.png"), encoder.place_title(encoder.bg_img), compression=0)
+    iio.imsave(os.path.join(img_path, f"{img_name}-foreg.png"), encoder.place_title(encoder.fg_img), compression=0)
+    iio.imsave(os.path.join(img_path, f"{img_name}-contr.png"), encoder.place_title(encoder.contour_img), compression=0)
 
     texels = encoder.encode()
-    img_rec = encoder.deblockify(texels)
+    img_rec = encoder.place_title(encoder.deblockify(texels))
 
     iio.imsave(os.path.join(img_path, f"{img_name}-texels.png"), img_rec, compression=0)
 
